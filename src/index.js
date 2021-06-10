@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const app = express();
 const hbs = require('hbs');
+const requests = require('requests');
 
 const staticPath = path.join(__dirname,"../public");
 const templatePath = path.join(__dirname,"../templates/views");
@@ -28,9 +29,28 @@ app.get("/", (req,res) => {
 })
 
 app.get("/about", (req,res) => {
+    console.log(req.query);
     res.render('about', {
         channelName : "Welcome Roy" // dynamic content to about.hbs
     });
+})
+
+app.get("/gallery",(req,res) => {
+    // make sure to have requests package from npm
+    requests(`http://api.openweathermap.org/data/2.5/weather?q=${req.query.name}&appid=dbe7ec7fd358d632555d8a6d51fb087d`)
+        .on('data',(chunk) => {
+            const objData = JSON.parse(chunk);
+            const arrData = [objData]; // array of an object
+            console.log(`City name is ${arrData[0].name} and Temp is ${arrData[0].main.temp / 10}`);
+            
+            res.write(`City name is ${arrData[0].name} and Temp is ${arrData[0].main.temp /10}`);
+        })
+        .on('end', (err) => {
+          if (err) return console.log('connection closed due to errors', err);
+         
+         res.end();
+        });
+        // res.render('gallery');
 })
 
 // Adding 404 custom error pages 
